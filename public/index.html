@@ -40,7 +40,7 @@
         #backgroundImg {
             top: 0;
             left: 0;
-           
+            display: flex;
             position: absolute;
             width: auto;
             height: 150px;
@@ -71,7 +71,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        var socket = io.connect('http://192.168.1.119:3000'); // Replace with your server IP
+        var socket = io.connect('http://192.168.1.119:3001'); // Replace with your server IP
 
         var data = {
             xPosition: 0,

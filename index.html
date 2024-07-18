@@ -25,10 +25,10 @@
 </head>
 <body>
     <div id="joyContainer"></div>
-    <script src="http://192.168.1.119:3000/socket.io/socket.io.js"></script>
+    <script src="http://192.168.1.119:3001/socket.io/socket.io.js"></script>
     <script src="joy.js"></script>
     <script>
-        var socket = io.connect('http://192.168.1.119:3000'); // Replace with your server IP
+        var socket = io.connect('http://192.168.1.119:3001'); // Replace with your server IP
 
         var Joy1 = new JoyStick('joyContainer', {}, function(stickData) {
             console.log('joystick Data:', stickData);

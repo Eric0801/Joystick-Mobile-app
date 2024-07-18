@@ -9,52 +9,66 @@
         body,
         html {
             margin: 0;
-            padding: 2 px;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            background-color: #ffffff;
+            padding: 0;
+            height: 100%; /* height 必須是100%*/
+            background: linear-gradient(0deg, hsla(27, 82%, 64%, 0.9), 30%, #efef74, white);
+            background-size: cover;
+            background-repeat: no-repeat;
             overflow: hidden;
+            z-index: -1;
+        }
+
+        #image-frame {
+            top: 0;
+            left: 0;
+            display: flex;
+            position: relative;
+            width: 90%;
+            height: 150px;
+            margin-inline-start: 20px;
+            border-width: 50px;
+            border-style: solid whitesmoke;
+            border-color: linear-gradient(whitesmoke, transparent);
+            background-size: cover;
+            margin: auto;
+            margin-top: 48%;
+            overflow: auto;
+            justify-content: center;
+            align-content: flex-start;
+        }
+
+        #backgroundImg {
+            top: 0;
+            left: 0;
+           
+            position: absolute;
+            width: auto;
+            height: 150px;
+            background-size: cover;
+
         }
 
         #characterImage {
             position: absolute;
-            top: calc(100% - 450px);
-            left: 50%;
+            /*anchor center*/
             transform: translate(-50%, -50%);
-            width: 5%;
-            height: auto;
-        }
-
-        #background {
-            position: fixed;
-            display: flex;
-            top: 30%;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: auto;
-        }
-
-        #background img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: auto;
-            height: auto;
-            min-width: 100%;
-            min-height: 100%;
+            /*===========================*/
+            top: 50%;
+            left: 50%;
+            width: 25px;
+            height: 25px;
+            background-size: contain;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
 
 <body>
-    <div id="background">
-        <img src="park.jpg">
+    <div id="image-frame">
+        <img id="backgroundImg" src="park.jpg">
+        <img id="characterImage" src="cat.png">
     </div>
-    <img id="characterImage" src="cat.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         var socket = io.connect('http://192.168.1.119:3000'); // Replace with your server IP
@@ -73,13 +87,11 @@
 
         function moveCharacterImage(data) {
             var characterImg = document.getElementById('characterImage');
-            var backgroundImg = document.getElementById('background').querySelector('img');
-            var backgroundLeft = backgroundImg.offsetLeft;
-            var backgroundTop = backgroundImg.offsetTop;
+            var backgroundImg = document.getElementById('backgroundImg');
 
-            var maxMoveX = 12; // X轴移动的最大速度因子
-            var maxMoveY = 12; // Y轴移动的最大速度因子
-            var backgroundSpeedFactor = 3; // 背景滚动速度因子，值越小滚动越慢
+            var maxMoveX = 4; // X-axis maximum movement speed factor
+            var maxMoveY = 4; // Y-axis maximum movement speed factor
+            var backgroundSpeedFactor = 1; // Background scrolling speed factor, the smaller the value, the slower the scroll
 
             var speedX = Math.abs(data.x) / 100 * maxMoveX;
             var speedY = Math.abs(data.y) / 100 * maxMoveY;
@@ -88,8 +100,8 @@
             var offsetX = directionX * speedX;
             var offsetY = directionY * speedY;
 
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
+            var container = document.getElementById('image-frame');
+            var containerRect = container.getBoundingClientRect();
             var backgroundOffsetX = parseFloat(backgroundImg.style.left) || 0;
             var backgroundOffsetY = parseFloat(backgroundImg.style.top) || 0;
             var newBackgroundOffsetX = backgroundOffsetX;
@@ -97,21 +109,21 @@
             var backgroundReachedLimitX = false;
             var backgroundReachedLimitY = false;
 
-            // check if image is centered on screen
-            var characterCenterThresholdX = windowWidth / 2;
-            var characterCenterThresholdY = windowHeight / 2;
+            // Check if image is centered on screen
+            var characterCenterThresholdX = containerRect.width / 2;
+            var characterCenterThresholdY = containerRect.height / 2;
             var characterInCenterX = Math.abs(parseFloat(characterImg.offsetLeft) - characterCenterThresholdX) < maxMoveX;
 
-
-            if (characterCenterThresholdX == windowWidth / 2 && characterInCenterX) {
-                // move background
+            if (characterInCenterX) {
+                // Move background
                 newBackgroundOffsetX -= offsetX * backgroundSpeedFactor;
                 newBackgroundOffsetY -= offsetY * backgroundSpeedFactor;
                 var backgroundImgWidth = backgroundImg.clientWidth;
-                var currentImgTop = parseFloat(characterImg.offsetTop) || 0;
-                var maxScrollX = backgroundImgWidth - windowWidth;
-                var newImgTop = currentImgTop - offsetY;
+                var backgroundImgHeight = backgroundImg.clientHeight;
+                var maxScrollX = backgroundImgWidth - containerRect.width;
+                var maxScrollY = backgroundImgHeight - containerRect.height;
 
+                console.log(containerRect.width);
                 if (newBackgroundOffsetX < -maxScrollX) {
                     newBackgroundOffsetX = -maxScrollX;
                     backgroundReachedLimitX = true;
@@ -121,65 +133,63 @@
                     backgroundReachedLimitX = true;
                 }
 
-                if (newImgTop < backgroundTop) {
-                    newImgTop = backgroundTop;
+                if (newBackgroundOffsetY < -maxScrollY) {
+                    newBackgroundOffsetY = -maxScrollY;
+                    backgroundReachedLimitY = true;
                 }
-                if (newImgTop > windowHeight) {
-                    newImgTop = windowHeight;
-
+                if (newBackgroundOffsetY > 0) {
+                    newBackgroundOffsetY = 0;
+                    backgroundReachedLimitY = true;
                 }
-                characterImg.style.left = `${newImgLeft}px`;
-                characterImg.style.top = `${newImgTop}px`;
 
                 backgroundImg.style.left = `${newBackgroundOffsetX}px`;
+                backgroundImg.style.top = `${newBackgroundOffsetY}px`;
 
-                // 当背景达到边界，图片移动到中间
-                if (backgroundReachedLimitX) {
-                    console.log(123);
+                // When the background reaches the edge, the character moves to the center
+                if (backgroundReachedLimitX || backgroundReachedLimitY) {
                     var currentImgLeft = parseFloat(characterImg.offsetLeft) || 0;
                     var currentImgTop = parseFloat(characterImg.offsetTop) || 0;
                     var newImgLeft = currentImgLeft + offsetX;
                     var newImgTop = currentImgTop - offsetY;
 
-                    if (newImgLeft < backgroundLeft) {
-                        newImgLeft = backgroundLeft;
+                    if (newImgLeft < 0) {
+                        newImgLeft = 0;
                     }
-                    if (newImgLeft > windowWidth) {
-                        newImgLeft = windowWidth;
+                    if (newImgLeft > containerRect.width ) {
+                        newImgLeft = containerRect.width - characterImg.offsetWidth;
                     }
-                    if (newImgTop < backgroundTop) {
-                        newImgTop = backgroundTop;
+                    if (newImgTop < 0) {
+                        newImgTop = 0;
                     }
-                    if (newImgTop > windowHeight) {
-                        newImgTop = windowHeight;
-
+                    if (newImgTop > containerRect.height ) {
+                        newImgTop = containerRect.height - characterImg.offsetHeight;
                     }
 
                     characterImg.style.left = `${newImgLeft}px`;
                     characterImg.style.top = `${newImgTop}px`;
                 }
             } else {
-                // 将图片移动到中间
+                // Move the character to the center
                 var currentImgLeft = parseFloat(characterImg.style.left) || 0;
                 var currentImgTop = parseFloat(characterImg.style.top) || 0;
                 var newImgLeft = currentImgLeft + offsetX;
                 var newImgTop = currentImgTop - offsetY;
 
-                // 限制图片在视窗内移动
+                // Limit the character movement within the container
                 if (newImgLeft < 0) {
                     newImgLeft = 0;
                 }
-                if (newImgLeft > windowWidth) {
-                    newImgLeft = windowWidth;
+                if (newImgLeft > containerRect.width ) {
+                    newImgLeft = containerRect.width;
                 }
                 if (newImgTop < 0) {
                     newImgTop = 0;
                 }
-                if (newImgTop > windowHeight) {
-                    newImgTop = windowHeight;
+                if (newImgTop > containerRect.height) {
+                    newImgTop = containerRect.height ;
                 }
 
-                // 当图片回到中间后再移动背景
+                // When the character returns to the center, move the background
                 if (Math.abs(newImgLeft - characterCenterThresholdX) < maxMoveX && Math.abs(newImgTop - characterCenterThresholdY) < maxMoveY) {
                     newImgLeft = characterCenterThresholdX;
                     newImgTop = characterCenterThresholdY;
@@ -204,6 +214,7 @@
         socket.on('joystickMove', function (data) {
             isDragging = true;
             lastJoystickData = data;
+            console.log(lastJoystickData);
         });
 
         // Handle mouse release
@@ -215,7 +226,6 @@
         document.addEventListener('touchend', function () {
             isDragging = false;
         });
-
     </script>
 </body>
 
